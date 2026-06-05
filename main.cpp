@@ -59,15 +59,11 @@ static void endian(unsigned char *data, int len)
 int i;
 
 for (i = 0; i < len/2; i++) {
+    unsigned char temp;
 
-unsigned char temp;
-
-temp = data;
-
-data = data[len-i-1];
-
-data[len-i-1] = temp;
-
+    temp = data[i];
+    data[i] = data[len-i-1];
+    data[len-i-1] = temp;
 }
 
 }
@@ -85,13 +81,9 @@ BIGNUM *y = BN_new();
 BN_zero(y);
 
 for (i = 0; i < 25; i++)
-
 {
-
-BN_mul_word(y, 24);
-
-BN_add_word(y, c);
-
+    BN_mul_word(y, 24);
+    BN_add_word(y, c[i]);
 }
 
 n = BN_num_bytes(y);
@@ -118,7 +110,8 @@ BIGNUM *z;
 
 memcpy(y, x, sizeof(y)); // Copy X to Y; Y=X
 
-for (i = 15; y == 0; i--) {} i++; // skip following nulls
+for (i = 15; i >= 0 && y[i] == 0; i--) {}
+i++; // skip following nulls
 
 endian(y, i); // Reverse y
 
@@ -129,11 +122,8 @@ z = BN_bin2bn(y, i, NULL); // Convert y to BigNum z
 c[25] = 0;
 
 for (i = 24; i >= 0; i--) {
-
-unsigned char t = BN_div_word(z, 24);
-
-c = cset[t];
-
+    unsigned char t = BN_div_word(z, 24);
+    c[i] = cset[t];
 }
 
 BN_free(z);
@@ -166,11 +156,10 @@ strcpy(c, raw + 3);
 
 // Make checksum digit-part {...56X-}
 
-assert(strlen© == 6);
+assert(strlen(c) == 6);
 
 for (i = 0; i < 6; i++)
-
-digit -= c - '0'; // Sum digits
+    digit -= c[i] - '0'; // Sum digits
 
 while (digit < 0)
 
@@ -193,11 +182,9 @@ int i;
 assert(strlen((const char *)pk) == 25);
 
 for (i = 0; i < 25; i++) {
+    putchar(pk[i]);
 
-putchar(pk);
-
-if (i != 24 && i % 5 == 4) putchar('-');
-
+    if (i != 24 && i % 5 == 4) putchar('-');
 }
 
 }
@@ -218,7 +205,7 @@ for (i = 0, k = 0; i < strlen(cdkey); i++) {
 
 for (j = 0; j < 24; j++) {
 
-if (cdkey != '-' && cdkey == cset[j]) {
+if (cdkey[i] != '-' && cdkey[i] == cset[j]) {
 
 key[k++] = j;
 
@@ -452,7 +439,7 @@ BN_free(x);
 
 BN_free(y);
 
-EC_POINT_free®;
+EC_POINT_free(r);
 
 BN_CTX_free(ctx);
 
